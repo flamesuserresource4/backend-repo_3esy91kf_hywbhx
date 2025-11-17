@@ -12,37 +12,60 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
-# Example schemas (replace with your own):
+# -------- Platform Schemas ---------
 
+class Company(BaseModel):
+    """
+    Companies participating in tenders
+    Collection name: "company"
+    """
+    name: str = Field(..., description="Company legal name")
+    email: Optional[str] = Field(None, description="Contact email")
+    phone: Optional[str] = Field(None, description="Contact phone")
+    address: Optional[str] = Field(None, description="Registered address")
+    country: str = Field("Qatar", description="Country")
+
+class Tender(BaseModel):
+    """
+    Tender listings
+    Collection name: "tender"
+    """
+    title: str = Field(..., description="Tender title")
+    description: str = Field(..., description="Detailed description")
+    category: str = Field(..., description="Category e.g. Construction, IT, Services")
+    budget_qar: Optional[float] = Field(None, ge=0, description="Estimated budget in QAR")
+    issuer: str = Field(..., description="Issuing organization")
+    location: str = Field("Qatar", description="Project location")
+    deadline: datetime = Field(..., description="Submission deadline (ISO 8601)")
+    status: str = Field("open", description="open | closed | awarded")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Search tags")
+
+class Bid(BaseModel):
+    """
+    Bids submitted to tenders
+    Collection name: "bid"
+    """
+    tender_id: str = Field(..., description="Reference to tender _id as string")
+    company_name: str = Field(..., description="Submitting company name")
+    contact_email: Optional[str] = Field(None, description="Contact email")
+    amount_qar: float = Field(..., ge=0, description="Bid amount in QAR")
+    proposal_summary: Optional[str] = Field(None, description="Short summary")
+    delivery_time_days: Optional[int] = Field(None, ge=0, description="Delivery timeline in days")
+
+# Example schemas kept for reference
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str
+    email: str
+    address: str
+    age: Optional[int] = None
+    is_active: bool = True
 
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    title: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    in_stock: bool = True
